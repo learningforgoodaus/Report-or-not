@@ -3,145 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Report or Not? Activity</title>
+    <title>Report or Not?</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        
-        :root {
-            --primary: #513873;
-            --secondary: #C6B4D9;
-            --success: #22c55e;
-            --error: #ef4444;
-            --bg-light: #F2F2F2;
-            --text-dark: #413659;
-            --border-color: #E5E7EB;
-        }
-
+        /* --- ORIGINAL STYLES PRESERVED --- */
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-light);
-            color: var(--text-dark);
-            min-height: 100vh;
-            margin: 0;
-            padding: 1rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background-color: #f6f5f8;
+            color: #413659;
             overscroll-behavior-y: contain;
         }
 
-        .main-card {
-            width: 100%;
-            max-width: 800px;
-            background-color: #FFF;
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        }
-
-        /* --- DESKTOP VIEW (PC) --- */
-        #desktop-game-container { display: block; }
         .drop-zone {
             transition: all 0.3s ease;
-            min-height: 160px;
-            border-width: 2px;
-        }
-        .drop-zone.drag-over {
-            background-color: #F9F7FC;
-            border-color: var(--primary);
-            transform: scale(1.01);
+            min-height: 140px;
         }
 
-        /* --- MOBILE VIEW (Phone/Tablet) --- */
-        #mobile-game-container { display: none; }
-        
+        .drop-zone.drag-over {
+            background-color: #C6B4D9;
+            transform: scale(1.02);
+            border-style: solid;
+        }
+
+        .scenario-card {
+            cursor: grab;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .scenario-card:active { cursor: grabbing; }
+
+        .correct { background-color: #dcfce7 !important; border-color: #22c55e !important; }
+        .incorrect { background-color: #fee2e2 !important; border-color: #ef4444 !important; }
+
+        /* --- MOBILE SWIPE SPECIFIC STYLES --- */
+        #mobile-stack-container { display: none; }
+
         @media (max-width: 767px) {
-            #desktop-game-container { display: none !important; }
-            #mobile-game-container { display: flex; flex-direction: column; align-items: center; width: 100%; }
-            .main-card { padding: 1.25rem; }
+            #scenarios-pool { display: none !important; }
+            #mobile-stack-container { 
+                display: flex; 
+                flex-direction: column; 
+                align-items: center; 
+                width: 100%;
+                margin-bottom: 2rem;
+            }
+            .desktop-instruction { display: none; }
         }
 
         .stack-area {
             position: relative;
             width: 100%;
-            height: 340px;
-            margin: 1.5rem 0;
+            height: 300px;
+            perspective: 1000px;
         }
 
         .swipe-card {
             position: absolute;
-            width: 100%;
-            height: 280px;
+            width: 90%;
+            left: 5%;
+            height: 250px;
             background: white;
             border-radius: 1rem;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 2rem;
+            padding: 1.5rem;
             text-align: center;
-            font-size: 1.05rem;
             font-weight: 600;
-            line-height: 1.5;
-            border: 1px solid var(--border-color);
+            border: 2px solid #e5e7eb;
             touch-action: none;
-            user-select: none;
-            z-index: 10;
         }
 
-        .summary-item { border-left-width: 6px; }
+        .summary-item { border-left: 6px solid; }
     </style>
 </head>
-<body>
+<body class="p-4 md:p-8">
 
-    <div class="main-card">
-        <header class="text-center mb-8">
-            <h1 class="text-2xl md:text-3xl font-bold text-[#513873] mb-3">Report or Not?</h1>
-            <div class="h-1 w-20 bg-[#C6B4D9] mx-auto mb-4 rounded-full"></div>
-            <p id="instruction-text" class="text-sm md:text-base text-gray-500 font-medium italic"></p>
+    <div id="game-container" class="max-w-4xl mx-auto">
+        <header class="text-center mb-6">
+            <h1 class="text-2xl md:text-3xl font-bold text-[#513873] mb-2">Report or Not?</h1>
+            <p class="text-sm text-[#413659]">
+                <span class="desktop-instruction">Drag scenarios into the correct box.</span>
+                <span class="md:hidden">Swipe Left for No Report, Right for Report Required.</span>
+            </p>
         </header>
 
-        <div id="desktop-game-container">
-            <div id="desktop-pool" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-10"></div>
-            
-            <div class="grid grid-cols-2 gap-6">
-                <div id="zone-no-report" class="drop-zone border-2 border-dashed border-gray-300 rounded-xl p-5 flex flex-col items-center bg-gray-50" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
-                    <span class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">No Report Needed</span>
-                    <div class="zone-content w-full flex flex-col gap-3"></div>
-                </div>
-                <div id="zone-report" class="drop-zone border-2 border-dashed border-gray-300 rounded-xl p-5 flex flex-col items-center bg-gray-50" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
-                    <span class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Report Required</span>
-                    <div class="zone-content w-full flex flex-col gap-3"></div>
-                </div>
+        <div id="scenarios-pool" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"></div>
+
+        <div id="mobile-stack-container">
+            <div class="stack-area" id="card-stack"></div>
+            <div class="flex justify-between w-full px-4 mt-4 font-black text-[11px] uppercase tracking-tighter">
+                <div class="text-[#9C7F9D]">← No Report</div>
+                <div class="text-[#513873]">Report Required →</div>
             </div>
         </div>
 
-        <div id="mobile-game-container">
-            <div class="stack-area">
-                <div id="card-stack" class="w-full h-full relative"></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div id="zone-report" class="drop-zone border-4 border-dashed border-[#513873] rounded-2xl p-6 flex flex-col items-center bg-white shadow-sm" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+                <div class="bg-[#513873] text-white px-4 py-1 rounded-full text-xs font-bold mb-4 uppercase tracking-widest">Report Required</div>
+                <div class="zone-content w-full flex flex-col gap-3"></div>
             </div>
-            
-            <div class="grid grid-cols-2 w-full gap-4 pt-4 border-t border-gray-100">
-                <div class="text-center">
-                    <p class="text-[10px] font-black text-gray-400 uppercase mb-1">← SWIPE LEFT</p>
-                    <p class="text-[13px] font-bold text-[#413659]">No Report</p>
-                </div>
-                <div class="text-center">
-                    <p class="text-[10px] font-black text-gray-400 uppercase mb-1">SWIPE RIGHT →</p>
-                    <p class="text-[13px] font-bold text-[#513873]">Report Required</p>
-                </div>
+
+            <div id="zone-no-report" class="drop-zone border-4 border-dashed border-[#9C7F9D] rounded-2xl p-6 flex flex-col items-center bg-white shadow-sm" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+                <div class="bg-[#9C7F9D] text-white px-4 py-1 rounded-full text-xs font-bold mb-4 uppercase tracking-widest">No Report Needed</div>
+                <div class="zone-content w-full flex flex-col gap-3"></div>
             </div>
         </div>
 
-        <div id="summary-view" class="hidden">
-            <div class="border-t border-gray-100 pt-2">
-                <div id="results-list" class="space-y-4 mb-8"></div>
-                <button onclick="location.reload()" class="w-full bg-[#513873] text-white font-bold py-4 rounded-xl shadow-md hover:bg-[#413659]">
-                    Restart Activity
-                </button>
-            </div>
+        <div class="mt-10 text-center" id="controls-area">
+            <div id="feedback-message" class="text-lg font-bold mb-6 min-h-[30px]"></div>
+            <button onclick="resetActivity()" class="bg-[#413659] hover:bg-[#513873] text-white font-bold py-3 px-10 rounded-xl transition-all shadow-lg active:scale-95">
+                Reset Activity
+            </button>
         </div>
+    </div>
+
+    <div id="summary-view" class="max-w-2xl mx-auto hidden bg-white p-8 rounded-2xl shadow-xl">
+        <h2 class="text-2xl font-bold text-[#513873] mb-6 text-center">Activity Results</h2>
+        <div id="results-list" class="space-y-4 mb-8"></div>
+        <button onclick="resetActivity()" class="w-full bg-[#413659] text-white font-bold py-4 rounded-xl">Try Again</button>
     </div>
 
     <script>
@@ -157,28 +141,34 @@
         let results = [];
 
         function init() {
-            const pool = document.getElementById('desktop-pool');
+            const pool = document.getElementById('scenarios-pool');
             const stack = document.getElementById('card-stack');
-            const instructions = document.getElementById('instruction-text');
-            const isMobile = window.innerWidth < 768;
+            const summary = document.getElementById('summary-view');
+            const game = document.getElementById('game-container');
             
-            instructions.innerText = isMobile 
-                ? "Swipe the cards left or right to categorize." 
-                : "Drag scenarios into the correct category below.";
+            pool.innerHTML = '';
+            stack.innerHTML = '';
+            results = [];
+            summary.classList.add('hidden');
+            game.classList.remove('hidden');
+            
+            document.querySelectorAll('.zone-content').forEach(z => z.innerHTML = '');
+            document.getElementById('feedback-message').innerText = '';
 
             const shuffled = [...scenarios].sort(() => Math.random() - 0.5);
 
             shuffled.forEach((s, i) => {
-                // DESKTOP: Only inject if container is visible
-                const dCard = document.createElement('div');
-                dCard.id = `d-${s.id}`;
-                dCard.className = "bg-white p-4 rounded-lg shadow-sm border border-gray-200 text-sm font-semibold text-center cursor-grab active:grabbing";
-                dCard.draggable = true;
-                dCard.innerText = s.text;
-                dCard.addEventListener('dragstart', (e) => e.dataTransfer.setData('text', s.id));
-                pool.appendChild(dCard);
+                // Desktop Cards
+                const card = document.createElement('div');
+                card.id = `card-${s.id}`;
+                card.className = "scenario-card bg-white p-4 rounded-xl shadow border border-gray-100 text-center font-medium";
+                card.draggable = true;
+                card.innerText = s.text;
+                card.dataset.category = s.category;
+                card.addEventListener('dragstart', dragStart);
+                pool.appendChild(card);
 
-                // MOBILE: Swipe logic
+                // Mobile Cards
                 const mCard = document.createElement('div');
                 mCard.className = "swipe-card";
                 mCard.innerText = s.text;
@@ -188,86 +178,81 @@
             });
         }
 
-        // --- MOBILE SWIPE LOGIC ---
-        function setupSwipe(el, data) {
-            let startX = 0, currentX = 0;
-            el.addEventListener('touchstart', (e) => {
-                startX = e.touches[0].clientX;
-                el.style.transition = 'none';
-            });
-            el.addEventListener('touchmove', (e) => {
-                currentX = e.touches[0].clientX - startX;
-                const rotation = currentX / 18;
-                el.style.transform = `translateX(${currentX}px) rotate(${rotation}deg)`;
-                
-                const dir = currentX > 0 ? 'report' : 'no-report';
-                if (Math.abs(currentX) > 30) {
-                    if (dir === data.category) {
-                        el.style.backgroundColor = '#F0FDF4'; // Green
-                        el.style.borderColor = '#22C55E';
-                    } else {
-                        el.style.backgroundColor = '#FEF2F2'; // Red
-                        el.style.borderColor = '#EF4444';
-                    }
-                }
-            });
-            el.addEventListener('touchend', () => {
-                const dir = currentX > 0 ? 'report' : 'no-report';
-                if (Math.abs(currentX) > 110 && dir === data.category) {
-                    el.style.transition = 'all 0.5s ease-out';
-                    el.style.transform = `translateX(${currentX * 4}px) rotate(${currentX / 4}deg)`;
-                    el.style.opacity = '0';
-                    setTimeout(() => el.remove(), 400);
-                    handlePlacement(data.id, dir);
-                } else {
-                    el.style.transition = 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.3s';
-                    el.style.transform = 'translateX(0) rotate(0)';
-                    el.style.backgroundColor = 'white';
-                    el.style.borderColor = '#E5E7EB';
-                }
-                currentX = 0;
-            });
-        }
-
-        // --- DESKTOP DRAG LOGIC ---
+        // --- ORIGINAL PC LOGIC ---
+        function dragStart(e) { e.dataTransfer.setData('text/plain', e.target.id); }
         function allowDrop(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
         function dragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
         function drop(e) {
             e.preventDefault();
             e.currentTarget.classList.remove('drag-over');
-            const id = e.dataTransfer.getData('text');
-            const zone = e.currentTarget.id === 'zone-report' ? 'report' : 'no-report';
-            handlePlacement(parseInt(id), zone);
+            const cardId = e.dataTransfer.getData('text/plain');
+            const card = document.getElementById(cardId);
+            const zoneType = e.currentTarget.id === 'zone-report' ? 'report' : 'no-report';
+            processPlacement(card, zoneType);
         }
 
-        function handlePlacement(id, choice) {
-            const s = scenarios.find(item => item.id === id);
-            results.push({ ...s, isCorrect: s.category === choice, userChoice: choice });
-            const dEl = document.getElementById(`d-${id}`);
-            if (dEl) dEl.remove();
-            if (results.length === scenarios.length) setTimeout(showSummary, 400);
+        function processPlacement(card, zoneType) {
+            const correctCategory = card.dataset.category;
+            const targetZone = zoneType === 'report' ? document.getElementById('zone-report') : document.getElementById('zone-no-report');
+            const zoneContent = targetZone.querySelector('.zone-content');
+
+            zoneContent.appendChild(card);
+            card.draggable = false;
+            card.className = "scenario-card p-3 rounded-lg border-2 text-center text-sm font-bold w-full";
+
+            const isCorrect = zoneType === correctCategory;
+            card.classList.add(isCorrect ? 'correct' : 'incorrect');
+            
+            results.push({ text: card.innerText, isCorrect, category: correctCategory });
+            
+            if (results.length === scenarios.length) setTimeout(showSummary, 500);
+        }
+
+        // --- MOBILE SWIPE LOGIC ---
+        function setupSwipe(el, data) {
+            let startX = 0, currentX = 0;
+            el.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; el.style.transition = 'none'; });
+            el.addEventListener('touchmove', (e) => {
+                currentX = e.touches[0].clientX - startX;
+                const rotation = currentX / 15;
+                el.style.transform = `translateX(${currentX}px) rotate(${rotation}deg)`;
+                const dir = currentX > 0 ? 'report' : 'no-report';
+                el.style.backgroundColor = (dir === data.category && Math.abs(currentX) > 30) ? '#f0fdf4' : (Math.abs(currentX) > 30 ? '#fef2f2' : 'white');
+            });
+            el.addEventListener('touchend', () => {
+                const dir = currentX > 0 ? 'report' : 'no-report';
+                if (Math.abs(currentX) > 100 && dir === data.category) {
+                    el.style.transition = 'all 0.4s ease-out';
+                    el.style.transform = `translateX(${currentX * 4}px) rotate(${currentX / 5}deg)`;
+                    setTimeout(() => { el.remove(); handleSwipePlacement(data, true); }, 300);
+                } else {
+                    el.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                    el.style.transform = 'translateX(0) rotate(0)';
+                    el.style.backgroundColor = 'white';
+                }
+                currentX = 0;
+            });
+        }
+
+        function handleSwipePlacement(data, isCorrect) {
+            results.push({ text: data.text, isCorrect, category: data.category });
+            if (results.length === scenarios.length) showSummary();
         }
 
         function showSummary() {
-            document.getElementById('desktop-game-container').style.display = 'none';
-            document.getElementById('mobile-game-container').style.display = 'none';
-            document.getElementById('instruction-text').innerText = "Review your activity results.";
+            document.getElementById('game-container').classList.add('hidden');
             const view = document.getElementById('summary-view');
             const list = document.getElementById('results-list');
             view.classList.remove('hidden');
             list.innerHTML = results.map(res => `
-                <div class="summary-item p-4 rounded-lg bg-white shadow-sm border border-gray-100 ${res.isCorrect ? 'border-l-green-500' : 'border-l-red-500'}">
-                    <p class="text-[13px] font-semibold text-gray-800 leading-tight mb-2">${res.text}</p>
-                    <div class="flex justify-between items-center">
-                        <span class="text-[9px] uppercase font-bold text-gray-400 tracking-wider">Required: ${res.category.replace('-', ' ')}</span>
-                        <span class="font-bold text-[11px] ${res.isCorrect ? 'text-green-600' : 'text-red-600'}">
-                            ${res.isCorrect ? 'CORRECT ✓' : 'INCORRECT ✕'}
-                        </span>
-                    </div>
+                <div class="summary-item p-4 rounded-lg bg-gray-50 border-l-gray-300 ${res.isCorrect ? 'border-l-green-500' : 'border-l-red-500'}">
+                    <p class="font-bold text-sm text-gray-800">${res.text}</p>
+                    <p class="text-xs mt-1 uppercase font-bold text-gray-400">Category: ${res.category.replace('-', ' ')}</p>
                 </div>
             `).join('');
         }
 
+        function resetActivity() { init(); }
         window.onload = init;
     </script>
 </body>
