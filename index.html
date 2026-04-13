@@ -6,7 +6,6 @@
     <title>Report or Not?</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* --- ORIGINAL STYLES PRESERVED --- */
         body {
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
             background-color: #f6f5f8;
@@ -14,6 +13,7 @@
             overscroll-behavior-y: contain;
         }
 
+        /* Desktop Drag Zone Styling */
         .drop-zone {
             transition: all 0.3s ease;
             min-height: 140px;
@@ -30,26 +30,28 @@
             transition: all 0.2s ease;
             font-size: 0.95rem;
             user-select: none;
-            -webkit-user-select: none;
         }
 
         .scenario-card:active { cursor: grabbing; }
 
-        .correct { background-color: #dcfce7 !important; border-color: #22c55e !important; }
-        .incorrect { background-color: #fee2e2 !important; border-color: #ef4444 !important; }
+        /* Status Colors */
+        .correct { 
+            background-color: #dcfce7 !important; 
+            border-color: #22c55e !important; 
+            color: #166534 !important;
+        }
+        .incorrect { 
+            background-color: #fee2e2 !important; 
+            border-color: #ef4444 !important; 
+            color: #991b1b !important;
+        }
 
-        /* --- MOBILE SWIPE SPECIFIC STYLES --- */
+        /* Mobile Interface Hiding */
         #mobile-stack-container { display: none; }
 
         @media (max-width: 767px) {
             #scenarios-pool { display: none !important; }
-            #mobile-stack-container { 
-                display: flex; 
-                flex-direction: column; 
-                align-items: center; 
-                width: 100%;
-                margin-bottom: 2rem;
-            }
+            #mobile-stack-container { display: flex; flex-direction: column; align-items: center; width: 100%; }
             .desktop-instruction { display: none; }
         }
 
@@ -57,7 +59,6 @@
             position: relative;
             width: 100%;
             height: 300px;
-            perspective: 1000px;
         }
 
         .swipe-card {
@@ -77,8 +78,6 @@
             border: 2px solid #e5e7eb;
             touch-action: none;
         }
-
-        .summary-item { border-left: 6px solid; }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -114,7 +113,7 @@
             </div>
         </div>
 
-        <div class="mt-10 text-center" id="controls-area">
+        <div class="mt-10 text-center">
             <div id="feedback-message" class="text-lg font-bold mb-6 min-h-[30px]"></div>
             <button onclick="resetActivity()" class="bg-[#413659] hover:bg-[#513873] text-white font-bold py-3 px-10 rounded-xl transition-all shadow-lg active:scale-95">
                 Reset Activity
@@ -122,10 +121,10 @@
         </div>
     </div>
 
-    <div id="summary-view" class="max-w-2xl mx-auto hidden bg-white p-8 rounded-2xl shadow-xl">
+    <div id="summary-view" class="max-w-2xl mx-auto hidden bg-white p-8 rounded-2xl shadow-xl mt-10">
         <h2 class="text-2xl font-bold text-[#513873] mb-6 text-center">Activity Results</h2>
         <div id="results-list" class="space-y-4 mb-8"></div>
-        <button onclick="resetActivity()" class="w-full bg-[#413659] text-white font-bold py-4 rounded-xl">Try Again</button>
+        <button onclick="resetActivity()" class="w-full bg-[#413659] text-white font-bold py-4 rounded-xl">Restart Activity</button>
     </div>
 
     <script>
@@ -158,17 +157,17 @@
             const shuffled = [...scenarios].sort(() => Math.random() - 0.5);
 
             shuffled.forEach((s, i) => {
-                // Desktop Cards
+                // Desktop Card Creation
                 const card = document.createElement('div');
                 card.id = `card-${s.id}`;
-                card.className = "scenario-card bg-white p-4 rounded-xl shadow border border-gray-100 text-center font-medium";
+                card.className = "scenario-card bg-white p-4 rounded-xl shadow border border-gray-200 text-center font-medium";
                 card.draggable = true;
                 card.innerText = s.text;
                 card.dataset.category = s.category;
-                card.addEventListener('dragstart', dragStart);
+                card.addEventListener('dragstart', (e) => e.dataTransfer.setData('text/plain', e.target.id));
                 pool.appendChild(card);
 
-                // Mobile Cards
+                // Mobile Card Creation
                 const mCard = document.createElement('div');
                 mCard.className = "swipe-card";
                 mCard.innerText = s.text;
@@ -178,8 +177,7 @@
             });
         }
 
-        // --- ORIGINAL PC LOGIC ---
-        function dragStart(e) { e.dataTransfer.setData('text/plain', e.target.id); }
+        // Desktop Drag & Drop Logic
         function allowDrop(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
         function dragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
         function drop(e) {
@@ -188,27 +186,27 @@
             const cardId = e.dataTransfer.getData('text/plain');
             const card = document.getElementById(cardId);
             const zoneType = e.currentTarget.id === 'zone-report' ? 'report' : 'no-report';
-            processPlacement(card, zoneType);
+            
+            // Move card and color it
+            processDesktopPlacement(card, zoneType);
         }
 
-        function processPlacement(card, zoneType) {
-            const correctCategory = card.dataset.category;
+        function processDesktopPlacement(card, zoneType) {
             const targetZone = zoneType === 'report' ? document.getElementById('zone-report') : document.getElementById('zone-no-report');
             const zoneContent = targetZone.querySelector('.zone-content');
+            const correctCategory = card.dataset.category;
+            const isCorrect = zoneType === correctCategory;
 
+            // Move to zone and update styling
             zoneContent.appendChild(card);
             card.draggable = false;
-            card.className = "scenario-card p-3 rounded-lg border-2 text-center text-sm font-bold w-full";
-
-            const isCorrect = zoneType === correctCategory;
-            card.classList.add(isCorrect ? 'correct' : 'incorrect');
+            card.className = `scenario-card p-3 rounded-lg border-2 text-center text-sm font-bold w-full ${isCorrect ? 'correct' : 'incorrect'}`;
             
             results.push({ text: card.innerText, isCorrect, category: correctCategory });
-            
-            if (results.length === scenarios.length) setTimeout(showSummary, 500);
+            if (results.length === scenarios.length) setTimeout(showSummary, 800);
         }
 
-        // --- MOBILE SWIPE LOGIC ---
+        // Mobile Swipe Logic
         function setupSwipe(el, data) {
             let startX = 0, currentX = 0;
             el.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; el.style.transition = 'none'; });
@@ -216,8 +214,11 @@
                 currentX = e.touches[0].clientX - startX;
                 const rotation = currentX / 15;
                 el.style.transform = `translateX(${currentX}px) rotate(${rotation}deg)`;
+                
                 const dir = currentX > 0 ? 'report' : 'no-report';
-                el.style.backgroundColor = (dir === data.category && Math.abs(currentX) > 30) ? '#f0fdf4' : (Math.abs(currentX) > 30 ? '#fef2f2' : 'white');
+                if (Math.abs(currentX) > 40) {
+                    el.style.backgroundColor = (dir === data.category) ? '#dcfce7' : '#fee2e2';
+                }
             });
             el.addEventListener('touchend', () => {
                 const dir = currentX > 0 ? 'report' : 'no-report';
@@ -245,7 +246,7 @@
             const list = document.getElementById('results-list');
             view.classList.remove('hidden');
             list.innerHTML = results.map(res => `
-                <div class="summary-item p-4 rounded-lg bg-gray-50 border-l-gray-300 ${res.isCorrect ? 'border-l-green-500' : 'border-l-red-500'}">
+                <div class="p-4 rounded-lg bg-gray-50 border-l-4 ${res.isCorrect ? 'border-green-500' : 'border-red-500'} shadow-sm">
                     <p class="font-bold text-sm text-gray-800">${res.text}</p>
                     <p class="text-xs mt-1 uppercase font-bold text-gray-400">Category: ${res.category.replace('-', ' ')}</p>
                 </div>
