@@ -19,92 +19,98 @@
             background-color: var(--bg-light);
             color: #413659;
             overscroll-behavior-y: contain;
-            overflow-x: hidden;
         }
 
-        /* Desktop Drag & Drop Styles */
-        .drop-zone { transition: all 0.3s ease; min-height: 160px; }
+        /* DESKTOP DRAG & DROP */
+        .drop-zone { transition: all 0.3s ease; min-height: 140px; }
         .drop-zone.drag-over { background-color: #C6B4D9; transform: scale(1.02); border-style: solid; }
 
-        /* Mobile Card Stack Styles */
-        #mobile-stack-container {
-            position: relative;
-            height: 300px;
-            width: 100%;
-            display: none;
+        /* MOBILE SWIPE CARD STACK */
+        #mobile-game-container { display: none; }
+        
+        @media (max-width: 767px) {
+            #desktop-game-container { display: none; }
+            #mobile-game-container { display: flex; flex-direction: column; align-items: center; }
         }
 
-        @media (max-width: 767px) {
-            #desktop-pool { display: none; }
-            #mobile-stack-container { display: flex; justify-content: center; }
-            .desktop-only-text { display: none; }
+        .stack-area {
+            position: relative;
+            width: 100%;
+            height: 320px;
+            margin-top: 10px;
         }
 
         .swipe-card {
             position: absolute;
-            width: 100%;
-            max-width: 320px;
-            height: 200px;
+            width: 90%;
+            left: 5%;
+            height: 260px;
             background: white;
-            border-radius: 1rem;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 2rem;
+            padding: 1.5rem;
             text-align: center;
+            font-size: 1.1rem;
             font-weight: 600;
+            border: 2px solid #e5e7eb;
             touch-action: none;
             user-select: none;
-            cursor: grab;
-            border: 2px solid #e5e7eb;
-            transition: background-color 0.2s ease;
+            z-index: 10;
         }
 
-        .swipe-card:active { cursor: grabbing; }
-
-        /* Summary View helpers */
-        .summary-item { border-left: 4px solid transparent; }
-        .summary-item.correct { border-left-color: var(--success); }
-        .summary-item.incorrect { border-left-color: var(--error); }
+        .summary-item { border-left: 5px solid; }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
-    <div id="game-container" class="max-w-4xl mx-auto">
-        <header class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-[#513873] mb-2">Report or Not?</h1>
-            <p class="text-gray-600">
-                <span class="desktop-only-text">Drag the cards into the correct reporting category.</span>
-                <span class="md:hidden">Swipe <b>Left</b> for No Report, <b>Right</b> for Report Required.</span>
-            </p>
+    <div id="main-wrapper" class="max-w-4xl mx-auto">
+        
+        <header class="text-center mb-6">
+            <h1 class="text-2xl md:text-4xl font-bold text-[#513873] mb-2">Report or Not?</h1>
+            <p id="instruction-text" class="text-sm md:text-base text-gray-600 font-medium italic"></p>
         </header>
 
-        <div id="desktop-pool" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10"></div>
-
-        <div id="mobile-stack-container" class="mb-10">
-            <div id="card-stack" class="relative w-full flex justify-center">
+        <div id="desktop-game-container">
+            <div id="desktop-pool" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"></div>
+            
+            <div class="grid grid-cols-2 gap-8">
+                <div id="zone-no-report" class="drop-zone border-4 border-dashed border-[#9C7F9D] rounded-2xl p-6 flex flex-col items-center bg-white shadow-sm" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+                    <div class="bg-[#9C7F9D] text-white px-4 py-1 rounded-full text-xs font-bold mb-4 uppercase tracking-widest">No Report</div>
+                    <div class="zone-content w-full flex flex-col gap-3"></div>
                 </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4 md:gap-8">
-            <div id="zone-no-report" class="drop-zone border-4 border-dashed border-[#9C7F9D] rounded-2xl p-4 flex flex-col items-center bg-white shadow-sm" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
-                <div class="bg-[#9C7F9D] text-white px-4 py-1 rounded-full text-xs font-bold mb-4 uppercase tracking-widest">No Report</div>
-                <div class="zone-content w-full flex flex-col gap-2 hidden md:flex"></div>
-            </div>
-
-            <div id="zone-report" class="drop-zone border-4 border-dashed border-[#513873] rounded-2xl p-4 flex flex-col items-center bg-white shadow-sm" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
-                <div class="bg-[#513873] text-white px-4 py-1 rounded-full text-xs font-bold mb-4 uppercase tracking-widest">Report Required</div>
-                <div class="zone-content w-full flex flex-col gap-2 hidden md:flex"></div>
+                <div id="zone-report" class="drop-zone border-4 border-dashed border-[#513873] rounded-2xl p-6 flex flex-col items-center bg-white shadow-sm" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+                    <div class="bg-[#513873] text-white px-4 py-1 rounded-full text-xs font-bold mb-4 uppercase tracking-widest">Report Required</div>
+                    <div class="zone-content w-full flex flex-col gap-3"></div>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="summary-view" class="max-w-2xl mx-auto hidden bg-white p-8 rounded-3xl shadow-xl">
-        <h2 class="text-2xl font-bold text-center mb-6">Activity Results</h2>
-        <div id="results-list" class="space-y-4 mb-8"></div>
-        <div class="text-center">
-            <button onclick="location.reload()" class="bg-[#513873] text-white px-8 py-3 rounded-xl font-bold hover:opacity-90">Try Again</button>
+        <div id="mobile-game-container" class="w-full">
+            <div class="stack-area">
+                <div id="card-stack" class="w-full h-full relative"></div>
+            </div>
+            
+            <div class="flex justify-between w-full px-4 mt-2">
+                <div class="flex flex-col items-center w-1/2">
+                    <span class="text-[12px] font-black text-[#9C7F9D] uppercase tracking-tighter">← SWIPE LEFT</span>
+                    <span class="text-[14px] font-bold text-[#9C7F9D]">No Report</span>
+                </div>
+                <div class="flex flex-col items-center w-1/2">
+                    <span class="text-[12px] font-black text-[#513873] uppercase tracking-tighter">SWIPE RIGHT →</span>
+                    <span class="text-[14px] font-bold text-[#513873]">Report Required</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="summary-view" class="hidden">
+            <div class="bg-white rounded-3xl p-6 shadow-xl border border-gray-100">
+                <h2 class="text-2xl font-bold text-[#513873] mb-6 text-center">Results Summary</h2>
+                <div id="results-list" class="space-y-3 mb-8"></div>
+                <button onclick="location.reload()" class="w-full bg-[#513873] text-white font-bold py-4 rounded-2xl shadow-lg">Restart Activity</button>
+            </div>
         </div>
     </div>
 
@@ -119,124 +125,57 @@
         ];
 
         let results = [];
-        let currentStack = [];
+        const isMobile = window.innerWidth < 768;
 
         function init() {
             const pool = document.getElementById('desktop-pool');
             const stack = document.getElementById('card-stack');
-            pool.innerHTML = '';
-            stack.innerHTML = '';
-            results = [];
-            currentStack = [...scenarios].sort(() => Math.random() - 0.5);
+            const instructions = document.getElementById('instruction-text');
+            
+            instructions.innerText = isMobile 
+                ? "Swipe the card to the correct side." 
+                : "Drag and drop the cards into the correct category.";
 
-            currentStack.forEach((s, index) => {
-                // Create Desktop Card
+            const shuffled = [...scenarios].sort(() => Math.random() - 0.5);
+
+            shuffled.forEach((s, i) => {
                 const dCard = document.createElement('div');
-                dCard.id = `desktop-card-${s.id}`;
-                dCard.className = "bg-white p-4 rounded-xl shadow border border-gray-200 text-center font-medium cursor-grab active:cursor-grabbing";
+                dCard.id = `d-${s.id}`;
+                dCard.className = "bg-white p-4 rounded-xl shadow border border-gray-100 text-center font-medium cursor-grab active:grabbing";
                 dCard.draggable = true;
                 dCard.innerText = s.text;
-                dCard.dataset.id = s.id;
-                dCard.addEventListener('dragstart', (e) => e.dataTransfer.setData('text/plain', s.id));
+                dCard.addEventListener('dragstart', (e) => e.dataTransfer.setData('text', s.id));
                 pool.appendChild(dCard);
 
-                // Create Mobile Card
                 const mCard = document.createElement('div');
                 mCard.className = "swipe-card";
-                mCard.id = `mobile-card-${s.id}`;
                 mCard.innerText = s.text;
-                mCard.style.zIndex = scenarios.length - index;
+                mCard.style.zIndex = scenarios.length - i;
                 stack.appendChild(mCard);
                 setupSwipe(mCard, s);
             });
         }
 
-        // --- DESKTOP LOGIC ---
-        function allowDrop(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
-        function dragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
-        function drop(e) {
-            e.preventDefault();
-            e.currentTarget.classList.remove('drag-over');
-            const scenarioId = e.dataTransfer.getData('text/plain');
-            const zoneType = e.currentTarget.id === 'zone-report' ? 'report' : 'no-report';
-            handlePlacement(parseInt(scenarioId), zoneType);
-        }
-
-        // --- MOBILE SWIPE LOGIC ---
         function setupSwipe(el, data) {
-            let startX = 0, currentX = 0, isDragging = false;
-            
+            let startX = 0, currentX = 0;
+
             el.addEventListener('touchstart', (e) => {
                 startX = e.touches[0].clientX;
-                isDragging = true;
                 el.style.transition = 'none';
             });
 
             el.addEventListener('touchmove', (e) => {
-                if (!isDragging) return;
                 currentX = e.touches[0].clientX - startX;
                 const rotation = currentX / 15;
                 el.style.transform = `translateX(${currentX}px) rotate(${rotation}deg)`;
                 
-                // Color Feedback
-                if (currentX > 50) el.style.backgroundColor = '#dcfce7'; // Green (Right)
-                else if (currentX < -50) el.style.backgroundColor = '#fee2e2'; // Red (Left)
-                else el.style.backgroundColor = 'white';
-            });
+                const swipedDirection = currentX > 0 ? 'report' : 'no-report';
+                const isCorrectPath = swipedDirection === data.category;
 
-            el.addEventListener('touchend', () => {
-                isDragging = false;
-                if (Math.abs(currentX) > 100) {
-                    const direction = currentX > 0 ? 'report' : 'no-report';
-                    el.style.transition = 'transform 0.5s ease-in';
-                    el.style.transform = `translateX(${currentX * 5}px) rotate(${currentX / 10}deg)`;
-                    setTimeout(() => el.remove(), 200);
-                    handlePlacement(data.id, direction);
-                } else {
-                    el.style.transition = 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-                    el.style.transform = `translateX(0) rotate(0)`;
-                    el.style.backgroundColor = 'white';
-                }
-                currentX = 0;
-            });
-        }
-
-        // --- CORE LOGIC ---
-        function handlePlacement(id, userChoice) {
-            const scenario = scenarios.find(s => s.id === id);
-            const isCorrect = scenario.category === userChoice;
-            
-            results.push({ ...scenario, userChoice, isCorrect });
-
-            // Remove from desktop pool if it exists
-            const dCard = document.getElementById(`desktop-card-${id}`);
-            if (dCard) dCard.remove();
-
-            if (results.length === scenarios.length) {
-                showSummary();
-            }
-        }
-
-        function showSummary() {
-            document.getElementById('game-container').classList.add('hidden');
-            const view = document.getElementById('summary-view');
-            const list = document.getElementById('results-list');
-            view.classList.remove('hidden');
-
-            list.innerHTML = results.map(res => `
-                <div class="summary-item ${res.isCorrect ? 'correct bg-green-50' : 'incorrect bg-red-50'} p-4 rounded-lg shadow-sm">
-                    <div class="flex justify-between items-start">
-                        <p class="font-medium text-sm text-gray-800">${res.text}</p>
-                        <span class="text-xs font-bold uppercase tracking-tighter ${res.isCorrect ? 'text-green-600' : 'text-red-600'}">
-                            ${res.isCorrect ? '✓ Correct' : '✕ Incorrect'}
-                        </span>
-                    </div>
-                    <p class="text-xs mt-2 text-gray-500">Category: <span class="capitalize">${res.category.replace('-', ' ')}</span></p>
-                </div>
-            `).join('');
-        }
-
-        window.onload = init;
-    </script>
-</body>
-</html>
+                if (Math.abs(currentX) > 20) {
+                    if (isCorrectPath) {
+                        el.style.backgroundColor = '#f0fdf4'; // Light Green
+                        el.style.borderColor = '#22c55e';
+                    } else {
+                        el.style.backgroundColor = '#fef2f2'; // Light Red
+                    
