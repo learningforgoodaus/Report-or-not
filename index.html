@@ -178,4 +178,82 @@
                         el.style.borderColor = '#22c55e';
                     } else {
                         el.style.backgroundColor = '#fef2f2'; // Light Red
-                    
+                        el.style.borderColor = '#ef4444';
+                    }
+                }
+            });
+
+            el.addEventListener('touchend', () => {
+                const swipedDirection = currentX > 0 ? 'report' : 'no-report';
+                const isCorrectPath = swipedDirection === data.category;
+
+                // Threshold met and correct direction
+                if (Math.abs(currentX) > 100 && isCorrectPath) {
+                    el.style.transition = 'all 0.4s ease-out';
+                    el.style.transform = `translateX(${currentX * 4}px) rotate(${currentX / 5}deg)`;
+                    el.style.opacity = '0';
+                    setTimeout(() => el.remove(), 400);
+                    handlePlacement(data.id, swipedDirection);
+                } else {
+                    // Snap back if wrong direction or threshold not met
+                    el.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.3s';
+                    el.style.transform = 'translateX(0) rotate(0)';
+                    el.style.backgroundColor = 'white';
+                    el.style.borderColor = '#e5e7eb';
+                }
+                currentX = 0;
+            });
+        }
+
+        // DESKTOP DRAG HANDLERS
+        function allowDrop(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+        function dragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+        function drop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            const id = e.dataTransfer.getData('text');
+            const zone = e.currentTarget.id === 'zone-report' ? 'report' : 'no-report';
+            handlePlacement(parseInt(id), zone);
+        }
+
+        function handlePlacement(id, userChoice) {
+            const scenario = scenarios.find(s => s.id === id);
+            const isCorrect = scenario.category === userChoice;
+            
+            // On desktop, we still track if they dropped it in the wrong box
+            results.push({ ...scenario, isCorrect, userChoice });
+
+            const dEl = document.getElementById(`d-${id}`);
+            if (dEl) dEl.remove();
+
+            if (results.length === scenarios.length) {
+                setTimeout(showSummary, 500);
+            }
+        }
+
+        function showSummary() {
+            document.getElementById('desktop-game-container').style.display = 'none';
+            document.getElementById('mobile-game-container').style.display = 'none';
+            document.getElementById('instruction-text').style.display = 'none';
+            
+            const view = document.getElementById('summary-view');
+            const list = document.getElementById('results-list');
+            view.classList.remove('hidden');
+
+            list.innerHTML = results.map(res => `
+                <div class="summary-item p-4 rounded-xl ${res.isCorrect ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-500'}">
+                    <p class="text-sm font-bold">${res.text}</p>
+                    <div class="flex justify-between items-center mt-2">
+                        <span class="text-[10px] uppercase font-bold text-gray-500">Result: ${res.category.replace('-', ' ')}</span>
+                        <span class="font-black text-xs ${res.isCorrect ? 'text-green-600' : 'text-red-600'}">
+                            ${res.isCorrect ? 'PASSED ✓' : 'MISSED ✕'}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
