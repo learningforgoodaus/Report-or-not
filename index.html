@@ -6,101 +6,105 @@
     <title>Report or Not?</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        :root {
+            --primary: #513873;
+            --secondary: #9C7F9D;
+            --success: #22c55e;
+            --error: #ef4444;
+            --bg-light: #f6f5f8;
+        }
+
         body {
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-            background-color: #f6f5f8;
+            background-color: var(--bg-light);
             color: #413659;
-            overscroll-behavior-y: contain; /* Prevents accidental refresh on mobile swipe */
+            overscroll-behavior-y: contain;
+            overflow-x: hidden;
         }
 
-        .drop-zone {
-            transition: all 0.3s ease;
-            min-height: 140px;
+        /* Desktop Drag & Drop Styles */
+        .drop-zone { transition: all 0.3s ease; min-height: 160px; }
+        .drop-zone.drag-over { background-color: #C6B4D9; transform: scale(1.02); border-style: solid; }
+
+        /* Mobile Card Stack Styles */
+        #mobile-stack-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+            display: none;
         }
 
-        /* PC Hover Effect */
-        .drop-zone.drag-over {
-            background-color: #C6B4D9;
-            transform: scale(1.02);
-            border-style: solid;
+        @media (max-width: 767px) {
+            #desktop-pool { display: none; }
+            #mobile-stack-container { display: flex; justify-content: center; }
+            .desktop-only-text { display: none; }
         }
 
-        /* MOBILE LAYOUT: Sticky horizontal card pool */
-        @media (max-width: 768px) {
-            #scenarios-pool {
-                position: sticky;
-                top: 0;
-                z-index: 50;
-                background: #f6f5f8;
-                padding: 15px 5px;
-                border-bottom: 2px solid #e5e7eb;
-                display: flex;
-                overflow-x: auto;
-                gap: 12px;
-                scroll-snap-type: x mandatory;
-                -webkit-overflow-scrolling: touch;
-            }
-            
-            .scenario-card {
-                flex: 0 0 80%; /* Shows 80% of card so user knows to swipe */
-                scroll-snap-align: center;
-                min-width: 240px;
-            }
-        }
-
-        .scenario-card {
-            cursor: grab;
-            transition: all 0.2s ease;
-            font-size: 0.95rem;
+        .swipe-card {
+            position: absolute;
+            width: 100%;
+            max-width: 320px;
+            height: 200px;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            text-align: center;
+            font-weight: 600;
+            touch-action: none;
             user-select: none;
-            -webkit-user-select: none;
+            cursor: grab;
+            border: 2px solid #e5e7eb;
+            transition: background-color 0.2s ease;
         }
 
-        .scenario-card:active { cursor: grabbing; }
+        .swipe-card:active { cursor: grabbing; }
 
-        /* Tap/Selection state for Mobile */
-        .selected-card {
-            ring: 4px solid #513873;
-            outline: 3px solid #C6B4D9;
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-
-        .correct { background-color: #dcfce7 !important; border-color: #22c55e !important; }
-        .incorrect { background-color: #fee2e2 !important; border-color: #ef4444 !important; }
+        /* Summary View helpers */
+        .summary-item { border-left: 4px solid transparent; }
+        .summary-item.correct { border-left-color: var(--success); }
+        .summary-item.incorrect { border-left-color: var(--error); }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
-    <div class="max-w-4xl mx-auto">
-        <header class="text-center mb-6">
-            <h1 class="text-2xl md:text-3xl font-bold text-[#513873] mb-2">Report or Not?</h1>
-            <p class="text-sm text-[#413659]">
-                <span class="hidden md:inline">Drag scenarios into the correct box.</span>
-                <span class="md:hidden">Tap a scenario, then tap a box below.</span>
+    <div id="game-container" class="max-w-4xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-[#513873] mb-2">Report or Not?</h1>
+            <p class="text-gray-600">
+                <span class="desktop-only-text">Drag the cards into the correct reporting category.</span>
+                <span class="md:hidden">Swipe <b>Left</b> for No Report, <b>Right</b> for Report Required.</span>
             </p>
         </header>
 
-        <div id="scenarios-pool" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            </div>
+        <div id="desktop-pool" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10"></div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div id="zone-report" class="drop-zone border-4 border-dashed border-[#513873] rounded-2xl p-6 flex flex-col items-center bg-white shadow-sm" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
-                <div class="bg-[#513873] text-white px-4 py-1 rounded-full text-xs font-bold mb-4 uppercase tracking-widest">Report Required</div>
-                <div class="zone-content w-full flex flex-col gap-3"></div>
-            </div>
-
-            <div id="zone-no-report" class="drop-zone border-4 border-dashed border-[#9C7F9D] rounded-2xl p-6 flex flex-col items-center bg-white shadow-sm" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
-                <div class="bg-[#9C7F9D] text-white px-4 py-1 rounded-full text-xs font-bold mb-4 uppercase tracking-widest">No Report Needed</div>
-                <div class="zone-content w-full flex flex-col gap-3"></div>
-            </div>
+        <div id="mobile-stack-container" class="mb-10">
+            <div id="card-stack" class="relative w-full flex justify-center">
+                </div>
         </div>
 
-        <div class="mt-10 text-center">
-            <div id="feedback-message" class="text-lg font-bold mb-6 min-h-[30px]"></div>
-            <button onclick="resetActivity()" class="bg-[#413659] hover:bg-[#513873] text-white font-bold py-3 px-10 rounded-xl transition-all shadow-lg active:scale-95">
-                Reset Activity
-            </button>
+        <div class="grid grid-cols-2 gap-4 md:gap-8">
+            <div id="zone-no-report" class="drop-zone border-4 border-dashed border-[#9C7F9D] rounded-2xl p-4 flex flex-col items-center bg-white shadow-sm" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+                <div class="bg-[#9C7F9D] text-white px-4 py-1 rounded-full text-xs font-bold mb-4 uppercase tracking-widest">No Report</div>
+                <div class="zone-content w-full flex flex-col gap-2 hidden md:flex"></div>
+            </div>
+
+            <div id="zone-report" class="drop-zone border-4 border-dashed border-[#513873] rounded-2xl p-4 flex flex-col items-center bg-white shadow-sm" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+                <div class="bg-[#513873] text-white px-4 py-1 rounded-full text-xs font-bold mb-4 uppercase tracking-widest">Report Required</div>
+                <div class="zone-content w-full flex flex-col gap-2 hidden md:flex"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="summary-view" class="max-w-2xl mx-auto hidden bg-white p-8 rounded-3xl shadow-xl">
+        <h2 class="text-2xl font-bold text-center mb-6">Activity Results</h2>
+        <div id="results-list" class="space-y-4 mb-8"></div>
+        <div class="text-center">
+            <button onclick="location.reload()" class="bg-[#513873] text-white px-8 py-3 rounded-xl font-bold hover:opacity-90">Try Again</button>
         </div>
     </div>
 
@@ -114,118 +118,124 @@
             { id: 6, text: "Staff member talks about a past event that is resolved.", category: "no-report" }
         ];
 
-        let selectedCard = null;
+        let results = [];
+        let currentStack = [];
 
         function init() {
-            const pool = document.getElementById('scenarios-pool');
+            const pool = document.getElementById('desktop-pool');
+            const stack = document.getElementById('card-stack');
             pool.innerHTML = '';
-            selectedCard = null;
-            const shuffled = [...scenarios].sort(() => Math.random() - 0.5);
+            stack.innerHTML = '';
+            results = [];
+            currentStack = [...scenarios].sort(() => Math.random() - 0.5);
 
-            shuffled.forEach(s => {
-                const card = document.createElement('div');
-                card.id = `card-${s.id}`;
-                card.className = "scenario-card bg-white p-4 rounded-xl shadow border border-gray-100 text-center font-medium";
-                card.draggable = true;
-                card.innerText = s.text;
-                card.dataset.category = s.category;
-                
-                card.addEventListener('dragstart', dragStart);
-                card.addEventListener('dragend', dragEnd);
-                card.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    handleCardClick(card);
-                });
-                pool.appendChild(card);
+            currentStack.forEach((s, index) => {
+                // Create Desktop Card
+                const dCard = document.createElement('div');
+                dCard.id = `desktop-card-${s.id}`;
+                dCard.className = "bg-white p-4 rounded-xl shadow border border-gray-200 text-center font-medium cursor-grab active:cursor-grabbing";
+                dCard.draggable = true;
+                dCard.innerText = s.text;
+                dCard.dataset.id = s.id;
+                dCard.addEventListener('dragstart', (e) => e.dataTransfer.setData('text/plain', s.id));
+                pool.appendChild(dCard);
+
+                // Create Mobile Card
+                const mCard = document.createElement('div');
+                mCard.className = "swipe-card";
+                mCard.id = `mobile-card-${s.id}`;
+                mCard.innerText = s.text;
+                mCard.style.zIndex = scenarios.length - index;
+                stack.appendChild(mCard);
+                setupSwipe(mCard, s);
             });
-
-            document.querySelectorAll('.zone-content').forEach(z => z.innerHTML = '');
-            document.getElementById('feedback-message').innerText = '';
         }
 
-        function handleCardClick(card) {
-            if (selectedCard === card) {
-                card.classList.remove('selected-card');
-                selectedCard = null;
-            } else {
-                if (selectedCard) selectedCard.classList.remove('selected-card');
-                selectedCard = card;
-                card.classList.add('selected-card');
-            }
-        }
-
-        document.querySelectorAll('.drop-zone').forEach(zone => {
-            zone.addEventListener('click', () => {
-                if (selectedCard) {
-                    const zoneType = zone.id === 'zone-report' ? 'report' : 'no-report';
-                    processPlacement(selectedCard, zoneType);
-                    selectedCard = null;
-                }
-            });
-        });
-
-        function dragStart(e) {
-            e.dataTransfer.setData('text/plain', e.target.id);
-            setTimeout(() => e.target.classList.add('opacity-50'), 0);
-        }
-
-        function dragEnd(e) { e.target.classList.remove('opacity-50'); }
-
-        function allowDrop(e) {
-            e.preventDefault();
-            e.currentTarget.classList.add('drag-over');
-        }
-
+        // --- DESKTOP LOGIC ---
+        function allowDrop(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
         function dragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
-
         function drop(e) {
             e.preventDefault();
             e.currentTarget.classList.remove('drag-over');
-            const cardId = e.dataTransfer.getData('text/plain');
-            const card = document.getElementById(cardId);
+            const scenarioId = e.dataTransfer.getData('text/plain');
             const zoneType = e.currentTarget.id === 'zone-report' ? 'report' : 'no-report';
-            processPlacement(card, zoneType);
+            handlePlacement(parseInt(scenarioId), zoneType);
         }
 
-        function processPlacement(card, zoneType) {
-            const correctCategory = card.dataset.category;
-            const targetZone = zoneType === 'report' ? document.getElementById('zone-report') : document.getElementById('zone-no-report');
-            const zoneContent = targetZone.querySelector('.zone-content');
+        // --- MOBILE SWIPE LOGIC ---
+        function setupSwipe(el, data) {
+            let startX = 0, currentX = 0, isDragging = false;
+            
+            el.addEventListener('touchstart', (e) => {
+                startX = e.touches[0].clientX;
+                isDragging = true;
+                el.style.transition = 'none';
+            });
 
-            card.classList.remove('selected-card', 'opacity-50');
-            zoneContent.appendChild(card);
-            card.draggable = false;
-            card.onclick = null;
-            card.className = "scenario-card p-3 rounded-lg border-2 text-center text-sm font-bold w-full";
+            el.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                currentX = e.touches[0].clientX - startX;
+                const rotation = currentX / 15;
+                el.style.transform = `translateX(${currentX}px) rotate(${rotation}deg)`;
+                
+                // Color Feedback
+                if (currentX > 50) el.style.backgroundColor = '#dcfce7'; // Green (Right)
+                else if (currentX < -50) el.style.backgroundColor = '#fee2e2'; // Red (Left)
+                else el.style.backgroundColor = 'white';
+            });
 
-            if (zoneType === correctCategory) {
-                card.classList.add('correct');
-                showFeedback("Correct!", "text-green-600");
-            } else {
-                card.classList.add('incorrect');
-                showFeedback("Incorrect location.", "text-red-600");
+            el.addEventListener('touchend', () => {
+                isDragging = false;
+                if (Math.abs(currentX) > 100) {
+                    const direction = currentX > 0 ? 'report' : 'no-report';
+                    el.style.transition = 'transform 0.5s ease-in';
+                    el.style.transform = `translateX(${currentX * 5}px) rotate(${currentX / 10}deg)`;
+                    setTimeout(() => el.remove(), 200);
+                    handlePlacement(data.id, direction);
+                } else {
+                    el.style.transition = 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                    el.style.transform = `translateX(0) rotate(0)`;
+                    el.style.backgroundColor = 'white';
+                }
+                currentX = 0;
+            });
+        }
+
+        // --- CORE LOGIC ---
+        function handlePlacement(id, userChoice) {
+            const scenario = scenarios.find(s => s.id === id);
+            const isCorrect = scenario.category === userChoice;
+            
+            results.push({ ...scenario, userChoice, isCorrect });
+
+            // Remove from desktop pool if it exists
+            const dCard = document.getElementById(`desktop-card-${id}`);
+            if (dCard) dCard.remove();
+
+            if (results.length === scenarios.length) {
+                showSummary();
             }
-            checkCompletion();
         }
 
-        function showFeedback(msg, colorClass) {
-            const fb = document.getElementById('feedback-message');
-            fb.innerText = msg;
-            fb.className = `text-lg font-bold mb-6 min-h-[30px] ${colorClass}`;
-            setTimeout(() => { if (fb.innerText === msg) fb.innerText = ''; }, 1500);
+        function showSummary() {
+            document.getElementById('game-container').classList.add('hidden');
+            const view = document.getElementById('summary-view');
+            const list = document.getElementById('results-list');
+            view.classList.remove('hidden');
+
+            list.innerHTML = results.map(res => `
+                <div class="summary-item ${res.isCorrect ? 'correct bg-green-50' : 'incorrect bg-red-50'} p-4 rounded-lg shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <p class="font-medium text-sm text-gray-800">${res.text}</p>
+                        <span class="text-xs font-bold uppercase tracking-tighter ${res.isCorrect ? 'text-green-600' : 'text-red-600'}">
+                            ${res.isCorrect ? '✓ Correct' : '✕ Incorrect'}
+                        </span>
+                    </div>
+                    <p class="text-xs mt-2 text-gray-500">Category: <span class="capitalize">${res.category.replace('-', ' ')}</span></p>
+                </div>
+            `).join('');
         }
 
-        function checkCompletion() {
-            const pool = document.getElementById('scenarios-pool');
-            if (pool.children.length === 0) {
-                const incorrect = document.querySelectorAll('.incorrect').length;
-                const fb = document.getElementById('feedback-message');
-                fb.className = "text-xl font-bold mb-6 text-[#513873]";
-                fb.innerText = incorrect === 0 ? "Perfect! Well done." : `Done! Score: ${scenarios.length - incorrect}/${scenarios.length}`;
-            }
-        }
-
-        function resetActivity() { init(); }
         window.onload = init;
     </script>
 </body>
